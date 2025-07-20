@@ -1,0 +1,116 @@
+from datetime import datetime
+from xml.etree.ElementTree import Element, SubElement
+
+class GameInfoMgr():
+    """Информация об игре"""
+
+    def __init__(self):
+        # Текст последней ошибки
+        self.__err_msg = ""
+
+        # Возможные теги с информацией в Anbernic и их типы
+        self.__d_elem_types = {
+            'path': str,
+            'name': str,
+            'desc': str,
+            'image': str, # В папке ./images
+            'video': str, # В папке ./videos
+            'marquee': str, # В папке ./images
+            'thumbnail': str, # В папке ./images
+            'rating': float, # 1.0 - это 100% ?
+            'releasedate': datetime,
+            'developer': str,
+            'publisher': str,
+            'genre': str, # Puzzle-Game - может, они какие-то конкретные?
+            'players': int,
+            'playcount': int,
+            'lastplayed': datetime,
+            'gametime': int, # Целое, в секундах
+            'lang': str, # en
+            'crc32': str, # Хэши для контроля целостности
+            'md5': str,
+            'cheevosHash': str
+        }
+
+        # Формат даты в XML теге
+        self.__date_format = "%Y%m%dT%H%M%S" # 20190318T000000
+
+        # Фактические значения атрибутов игры
+        self.__d_elems = {}
+
+
+    def get_last_error(self):
+        """Получить последний текст ошибки
+
+        :return: Строка с текстом ошибки
+        """
+
+        return self.__err_msg
+
+
+    def get_attrib_list(self):
+        """Получить список возможных атрибутов
+
+        :return: Список тегов - атрибутов игры
+        """
+
+        return self.__d_elem_types.keys()
+
+
+    def get_attrib_val(self, attrib_name):
+        """Получить значение атрибута игры
+
+        :param attrib_name: Наименование атрибута игры (тэг)
+        :return: Значение атрибута, либо False, если такой не предусмотрен
+        """
+
+        if attrib_name not in self.__d_elem_types.keys():
+            self.__err_msg = f"Атрибут {attrib_name} отсутствует"
+            return False
+
+        if attrib_name in self.__d_elems.keys:
+            return self.__d_elems[attrib_name]
+
+        if isinstance("", self.__d_elem_types[attrib_name]):
+            return ""
+
+        return None
+
+
+    def set_attrib_val(self, attrib_name, attrib_val):
+        """Задать значение атрибута игры
+
+        :param attrib_name: Наименование атрибута игры (тэг)
+        :param attrib_val: Значение атрибута игры
+        :return: True, при успехе
+        """
+
+        if attrib_name not in self.__d_elem_types.keys():
+            self.__err_msg = f"Атрибут {attrib_name} отсутствует"
+            return False
+
+        if not isinstance(attrib_val, self.__d_elem_types[attrib_name]):
+            # Ожидается другой тип данных для атрибута
+            self.__err_msg = f"Атрибут {attrib_name} должен иметь тип " \
+                + f"{str(self.__d_elem_types[attrib_name])}"
+            return False
+        
+        # Задаем значение атрибута игры
+        self.__d_elems[attrib_name] = attrib_val
+
+
+    def gen_xml_node(self):
+        """Сгенерировать узел XML на основе имеющихся данных
+
+        :return: XML узел (node)
+        """
+
+        xml_elem = Element("game")
+        for elem_tag, elem_val in self.__d_elems.items():
+            if self.__d_elem_types[elem_tag] == datetime:
+                elem_val = datetime.strftime(elem_val, self.__date_format)
+
+            xml_tag = SubElement(xml_elem, elem_tag)
+            xml_tag.text = elem_val
+
+        return xml_elem
