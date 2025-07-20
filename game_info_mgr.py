@@ -13,10 +13,10 @@ class GameInfoMgr():
             'path': str,
             'name': str,
             'desc': str,
-            'image': str, # В папке ./images
-            'video': str, # В папке ./videos
-            'marquee': str, # В папке ./images
-            'thumbnail': str, # В папке ./images
+            'image': str,
+            'video': str,
+            'marquee': str,
+            'thumbnail': str,
             'rating': float, # 1.0 - это 100% ?
             'releasedate': datetime,
             'developer': str,
@@ -25,8 +25,8 @@ class GameInfoMgr():
             'players': int,
             'playcount': int,
             'lastplayed': datetime,
-            'gametime': int, # Целое, в секундах
-            'lang': str, # en
+            'gametime': int, # В секундах
+            'lang': str, # en, ru
             'crc32': str, # Хэши для контроля целостности
             'md5': str,
             'cheevosHash': str
@@ -109,6 +109,12 @@ class GameInfoMgr():
         for elem_tag, elem_val in self.__d_elems.items():
             if self.__d_elem_types[elem_tag] == datetime:
                 elem_val = datetime.strftime(elem_val, self.__date_format)
+            elif elem_tag in ["image", "video", "marquee", "thumbnail"]:
+                # Изображения хранятся в отдельной папке images
+                elem_val = f"./images/{elem_val}"
+            elif elem_tag == "video":
+                # Видео хранится в отдельной папке videos
+                elem_val = f"./videos/{elem_val}"
 
             xml_tag = SubElement(xml_elem, elem_tag)
             xml_tag.text = elem_val
