@@ -29,6 +29,7 @@ class GameInfoMgr():
             'lang': str, # en, ru
             'crc32': str, # Хэши для контроля целостности
             'md5': str,
+            'cheevosId': int,
             'cheevosHash': str
         }
 
