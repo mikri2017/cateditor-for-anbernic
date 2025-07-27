@@ -69,7 +69,7 @@ class GameInfoMgr():
             self.__err_msg = f"Атрибут {attrib_name} отсутствует"
             return False
 
-        if attrib_name in self.__d_elems.keys:
+        if attrib_name in self.__d_elems.keys():
             return self.__d_elems[attrib_name]
 
         if isinstance("", self.__d_elem_types[attrib_name]):
