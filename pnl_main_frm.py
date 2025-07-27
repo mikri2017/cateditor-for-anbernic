@@ -41,7 +41,7 @@ class PnlMainFrm(wx.Panel):
 
         # Блок 3. Сообщения о проблемах
         self.__stb_warn_msgs = wx.StaticBox(self, wx.ID_ANY, "Сообщения об ошибках")
-        self.__stb_warn_msgs.SetMaxSize((-1, 200))
+        self.__stb_warn_msgs.SetMaxSize((-1, 150))
         self.__sizer_main.Add(self.__stb_warn_msgs, 1, wx.BOTTOM|wx.EXPAND)
 
         # Заполняем элементами Блок 1

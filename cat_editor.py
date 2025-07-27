@@ -6,8 +6,17 @@ from pnl_main_frm import PnlMainFrm
 
 class MainFrame(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self, None, title="CatEditor For Anbernic")
+        wx.Frame.__init__(
+            self,
+            None,
+            title="CatEditor For Anbernic",
+            size=(750, 700)
+        )
+
         self.pnl = PnlMainFrm(self)
+
+        # Устанавливаем минимальный размер окна
+        self.SetMinSize((400, 500))
 
 
 if __name__ == "__main__":
