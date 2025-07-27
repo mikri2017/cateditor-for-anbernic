@@ -72,7 +72,17 @@ class CatGamelistMgr():
                 for game_inf_tag in game_elem:
                     game_inf.set_attrib_val(game_inf_tag.tag, game_inf_tag.text)
 
-                self.__d_gamelist[game_inf.get_attrib_val("name")] = game_inf
+                game_name = game_inf.get_attrib_val("name")
+                if game_name == "":
+                    # Возьмём путь к файлу за имя
+                    game_name = game_inf.get_attrib_val("path")
+                    game_name = os.path.basename(game_name).strip()
+                    if game_name == "":
+                        # Если даже пути к файлу с игрой нет,
+                        # пропускаем элемент
+                        continue
+
+                self.__d_gamelist[game_name] = game_inf
 
         return True
 
