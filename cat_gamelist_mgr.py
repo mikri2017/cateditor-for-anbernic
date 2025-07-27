@@ -83,8 +83,12 @@ class CatGamelistMgr():
         :return: Список названий доступных игр
         """
 
+        # Сортирум словарь
+        self.__d_gamelist = dict(sorted(self.__d_gamelist.items()))
+
+        # Отправляем список названий игр
         return list(self.__d_gamelist.keys())
-    
+
 
     def get_game_attribs(self, name):
         """Получить атрибуты игры по её названию
