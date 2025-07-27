@@ -26,14 +26,47 @@ class PnlMainFrm(wx.Panel):
         self.__gamelist_mgr = CatGamelistMgr()
 
         # Рисуем интерфейс приложения
-        self.stxt_cat_folder = wx.StaticText(self, -1, "Путь к папке с каталогом игр", (10, 25))
-        self.txtctrl_cat_folder = wx.TextCtrl(self, wx.ID_ANY, wx.EmptyString, wx.Point(180, 20),
-                                                wx.Size(475, -1), 0)
+        # Основной sizer под 3 блока интерфейса
+        self.__sizer_main = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.__sizer_main)
 
-        self.btn_cat_folder_set = wx.Button(self, wx.ID_ANY, "Выбрать файл",
-                                                     wx.Point(660, 20),
-                                                     wx.Size(90, -1), 0)
-        self.btn_cat_folder_set.Bind(wx.EVT_BUTTON, self.btn_cat_folder_set_click)
+        # Блок 1. Выбор папки с каталогом игр
+        self.__stb_path = wx.StaticBox(self, wx.ID_ANY, "")
+        self.__sizer_stb_path = wx.StaticBoxSizer(self.__stb_path, orient=wx.HORIZONTAL)
+        self.__sizer_main.Add(self.__sizer_stb_path, 0, wx.TOP|wx.EXPAND)
+
+        # Блок 2. Редактор каталога игр
+        self.__stb_games_cat = wx.StaticBox(self, wx.ID_ANY, "Редактор каталога игр")
+        self.__sizer_main.Add(self.__stb_games_cat, 1, wx.TOP|wx.EXPAND, 0)
+
+        # Блок 3. Сообщения о проблемах
+        self.__stb_warn_msgs = wx.StaticBox(self, wx.ID_ANY, "Сообщения об ошибках")
+        self.__stb_warn_msgs.SetMaxSize((-1, 200))
+        self.__sizer_main.Add(self.__stb_warn_msgs, 1, wx.BOTTOM|wx.EXPAND)
+
+        # Заполняем элементами Блок 1
+        # Строка пояснения
+        self.__stxt_cat_folder = wx.StaticText(
+            self.__stb_path,
+            wx.ID_ANY,
+            "Путь к папке\nс каталогом игр"
+        )
+
+        self.__sizer_stb_path.Add(self.__stxt_cat_folder, 0, wx.LEFT, border=5)
+
+        # Поле с путем до папки каталога
+        self.__txtctrl_cat_folder = wx.TextCtrl(
+            self.__stb_path,
+            wx.ID_ANY,
+            wx.EmptyString
+        )
+
+        self.__sizer_stb_path.Add(self.__txtctrl_cat_folder, 1, wx.LEFT|wx.EXPAND, border=5)
+
+        # Кнопка выбора папки
+        self.__btn_cat_folder_set = wx.Button(self.__stb_path, wx.ID_ANY, "Обзор")
+        self.__sizer_stb_path.Add(self.__btn_cat_folder_set, 0, wx.RIGHT|wx.EXPAND, border=5)
+        self.__btn_cat_folder_set.Bind(wx.EVT_BUTTON, self.btn_cat_folder_set_click)
 
 
     def get_open_folder_path(self):
@@ -58,7 +91,7 @@ class PnlMainFrm(wx.Panel):
     def btn_cat_folder_set_click(self, event):
         folder_path_res = self.get_open_folder_path()
         if folder_path_res['res']:
-            self.txtctrl_cat_folder.SetValue(folder_path_res['folder_path'])
+            self.__txtctrl_cat_folder.SetValue(folder_path_res['folder_path'])
 
             # Определяем наличие наших файлов в папке
             l_files = os.listdir(folder_path_res['folder_path'])
@@ -66,7 +99,7 @@ class PnlMainFrm(wx.Panel):
                 if data['name'] in l_files:
                     self.__d_files[work_file]['exist'] = True
 
-            # 
+            # Общая информация о каталоге игр
             info_file = self.__d_files['info']['name']
             info_path = os.path.join(
                 folder_path_res['folder_path'],

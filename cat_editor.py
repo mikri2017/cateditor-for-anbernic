@@ -7,15 +7,7 @@ from pnl_main_frm import PnlMainFrm
 class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, title="CatEditor For Anbernic")
-
-        self.SetMaxSize((800, 755))
-        self.SetMinSize((800, 755))
-
         self.pnl = PnlMainFrm(self)
-
-        # Назначаем элемент вкладок в sizer для создания слоя
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.pnl.SetSizer(self.sizer)
 
 
 if __name__ == "__main__":
