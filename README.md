@@ -8,6 +8,7 @@
 
 * Модули python:
   * wxpython
+  * lxml
   * pyinstaller (для сборки в портативный формат)
 
 ## Сборка

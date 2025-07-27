@@ -1,5 +1,7 @@
 import wx
 import os
+from cat_info_mgr import CatInfoMgr
+from cat_gamelist_mgr import CatGamelistMgr
 
 class PnlMainFrm(wx.Panel):
     def __init__(self, parent):
@@ -16,6 +18,12 @@ class PnlMainFrm(wx.Panel):
                 'name': "gamelist.xml"
             }
         }
+
+        # Общая информация
+        self.__info_mgr = CatInfoMgr()
+
+        # Каталог игр
+        self.__gamelist_mgr = CatGamelistMgr()
 
         # Рисуем интерфейс приложения
         self.stxt_cat_folder = wx.StaticText(self, -1, "Путь к папке с каталогом игр", (10, 25))
@@ -58,4 +66,34 @@ class PnlMainFrm(wx.Panel):
                 if data['name'] in l_files:
                     self.__d_files[work_file]['exist'] = True
 
-            print(self.__d_files)
+            # 
+            info_file = self.__d_files['info']['name']
+            info_path = os.path.join(
+                folder_path_res['folder_path'],
+                info_file
+            )
+
+            self.__info_mgr.set_file_path(info_path)
+            if self.__d_files['info']['exist'] is True:
+                self.__info_mgr.load_info_from_file()
+
+            # Каталог игр
+            gamelist_file = self.__d_files['gamelist']['name']
+
+            gamelist_path = os.path.join(
+                folder_path_res['folder_path'],
+                gamelist_file
+            )
+
+            self.__gamelist_mgr.set_xml_file_path(gamelist_path)
+            if self.__d_files['gamelist']['exist'] is True:
+                self.__gamelist_mgr.parse_xml_file()
+
+
+            print("Информация:")
+            print(self.__info_mgr.get_info())
+
+            print("Игры:")
+            print(self.__gamelist_mgr.get_game_names())
+
+            # self.__gamelist_mgr.save_to_xml_file()

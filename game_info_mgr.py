@@ -1,5 +1,5 @@
 from datetime import datetime
-from xml.etree.ElementTree import Element, SubElement
+from lxml import etree
 
 class GameInfoMgr():
     """Информация об игре"""
@@ -58,6 +58,15 @@ class GameInfoMgr():
         return self.__d_elem_types.keys()
 
 
+    def get_filled_attribs(self):
+        """Получить список заполненных атрибутов игры
+
+        :return: Словарь с атрибутами
+        """
+
+        return self.__d_elems
+
+
     def get_attrib_val(self, attrib_name):
         """Получить значение атрибута игры
 
@@ -106,7 +115,7 @@ class GameInfoMgr():
         :return: XML узел (node)
         """
 
-        xml_elem = Element("game")
+        xml_elem = etree.Element("game")
         for elem_tag, elem_val in self.__d_elems.items():
             if self.__d_elem_types[elem_tag] == datetime:
                 elem_val = datetime.strftime(elem_val, self.__date_format)
@@ -117,7 +126,6 @@ class GameInfoMgr():
                 # Видео хранится в отдельной папке videos
                 elem_val = f"./videos/{elem_val}"
 
-            xml_tag = SubElement(xml_elem, elem_tag)
-            xml_tag.text = elem_val
+            etree.SubElement(xml_elem, elem_tag).text = elem_val
 
         return xml_elem
