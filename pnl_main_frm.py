@@ -125,6 +125,10 @@ class PnlMainFrm(wx.Panel):
         :return: Функция не возвращает результат
         """
 
+        # Сброс загруженных данных
+        self.__info_mgr = CatInfoMgr()
+        self.__gamelist_mgr = CatGamelistMgr()
+
         folder_path = self.__txtctrl_cat_folder.GetValue()
         if folder_path == "":
             header = f"Редактор каталога игр Anbernic"
