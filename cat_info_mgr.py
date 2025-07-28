@@ -25,7 +25,7 @@ class CatInfoMgr():
         :return: Текст последней ошибки
         """
 
-        return self.__err_mgr
+        return self.__err_msg
 
 
     def get_file_path(self):
@@ -72,8 +72,24 @@ class CatInfoMgr():
         """
 
         if not os.path.exists(self.__filepath):
-            self.__err_mgr = f"Файл {self.__filepath} не существует"
+            self.__err_msg = f"Файл {self.__filepath} не существует"
             return False
-        
-        with open(self.__filepath, encoding='utf-8') as file:
+
+        with open(self.__filepath, encoding="utf-8") as file:
             self.__info = file.read()
+
+
+    def save_info_to_file(self):
+        """Сохранить общую информацию в файл
+
+        :return: True, в случае успеха
+        """
+
+        if self.__filepath == "":
+            self.__err_msg = "Не задан путь к файлу с информацией!"
+            return False
+
+        with open(self.__filepath, "w", encoding="utf-8") as file:
+            file.write(self.__info)
+
+        return True
