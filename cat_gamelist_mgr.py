@@ -120,24 +120,24 @@ class CatGamelistMgr():
             return GameInfoMgr().get_possible_attribs()
 
 
-    def set_game_attribs(self, d_attribs):
-        """Задать атрибуты игры по её названию
+    def set_game_attrib(self, game_name, attrib_name, attrib_val):
+        """Задать атрибут игры по её названию
 
-        :param d_attribs: Словарь с атрибутами игры
+        :param game_name: Наименование игры
+        :param attrib_name: Наименование атрибута
+        :param attrib_val: Значение атрибута
         :return: True, в случае успеха
         """
 
-        if "name" not in d_attribs.keys():
-            self.__err_mgr = "Отсутствует атрибут 'name' - название игры!"
+        if (game_name is None) or (game_name == ""):
+            self.__err_mgr = "Для применения атрибута, требуется " \
+                + "наименование игры!"
             return False
-        
-        d_attribs['name'] = str(d_attribs['name']).strip()
 
-        game_inf = GameInfoMgr()
-        for attrib_name, attrib_val in d_attribs.items():
-            game_inf.set_attrib_val(attrib_name, attrib_val)
+        if game_name not in self.__d_gamelist.keys():
+            self.__d_gamelist[game_name] = GameInfoMgr()
 
-        self.__d_gamelist[d_attribs['name']] = game_inf
+        self.__d_gamelist[game_name].set_attrib_val(attrib_name, attrib_val)
         return True
 
 

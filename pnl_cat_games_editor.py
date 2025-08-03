@@ -17,6 +17,9 @@ class PnlCatGamesEditor(wx.Panel):
         # 0 - наименование атрибута, 1 и далее - элементы интерфейса
         self.__l_gattrs = []
 
+        # Индикатор, что поля заполняются не пользователем
+        self.__ignore_chg_attrib = False
+
         # Текст последней ошибки
         self.__err_msg = ""
 
@@ -139,6 +142,9 @@ class PnlCatGamesEditor(wx.Panel):
         :return: Функция не возвращает результат
         """
 
+        # Отмечаем, что заполнение происходит не пользователем
+        self.__ignore_chg_attrib = True
+
         # Получаем возможные атрибуты игры
         d_all_game_attrs = self.__gamelist_mgr.get_game_attribs(False)
 
@@ -165,7 +171,9 @@ class PnlCatGamesEditor(wx.Panel):
                 l_attr.append(stxt_gattr_desc)
 
                 txtctrl_gattr_val = wx.TextCtrl(pnl_game_attr)
+                txtctrl_gattr_val.SetName(attr_name)
                 sizer_pnl_game_attr.Add(txtctrl_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
+                txtctrl_gattr_val.Bind(wx.EVT_TEXT, self.txtctrl_changed)
                 l_attr.append(txtctrl_gattr_val)
 
                 self.__sizer_scrl_pnl_attrs.Add(pnl_game_attr, 1, wx.TOP|wx.EXPAND, 5)
@@ -177,6 +185,8 @@ class PnlCatGamesEditor(wx.Panel):
                 l_attr[0] = d_game_attrs[attr_name]
                 # Элемент интерфейса, хранящий значение
                 l_attr[3].SetValue(str(l_attr[0]))
+                l_attr[3].SetBackgroundColour(wx.WHITE)
+                l_attr[3].Refresh()
             else:
                 # Элемент интерфейса, хранящий значение
                 l_attr[3].SetValue("")
@@ -187,6 +197,9 @@ class PnlCatGamesEditor(wx.Panel):
                 self.__l_gattrs[i] = l_attr
 
             i += 1
+
+        # Дальше менять значение будет пользователь
+        self.__ignore_chg_attrib = False
 
 
     def lb_games_selected(self, event):
@@ -201,6 +214,39 @@ class PnlCatGamesEditor(wx.Panel):
 
         # Сброс и загрузка атрибутов игры
         self.reload_game_attrs()
+
+
+    def txtctrl_changed(self, event):
+        """Изменился текст свойства игры
+
+        :param event: Событие элемента графического интерфейса
+        :return: Функция не возвращает результат
+        """
+
+        if self.__selected_game != "":
+            if self.__ignore_chg_attrib is False:
+                # Пользователь изменил атрибут игры,
+                # применяем его к списку игр
+                txtctrl = event.GetEventObject()
+                attr_name = txtctrl.GetName()
+                attr_val = txtctrl.GetValue()
+                if attr_name in ["path", "name"]:
+                    # Нельзя оставлять пустыми основные атрибуты
+                    if attr_val.strip() == "":
+                        txtctrl.SetBackgroundColour(wx.RED)
+                        txtctrl.Refresh()
+                    else:
+                        txtctrl.SetBackgroundColour(wx.WHITE)
+                        txtctrl.Refresh()
+
+                if txtctrl.GetBackgroundColour() == wx.WHITE:
+                    # Изменение цвета поля говорит об ошибке
+                    # Сохраняем только поле с пустым фоновым цветом
+                    self.__gamelist_mgr.set_game_attrib(
+                        self.__selected_game,
+                        attr_name,
+                        attr_val
+                    )
 
 
     def btn_reset_click(self, event):
