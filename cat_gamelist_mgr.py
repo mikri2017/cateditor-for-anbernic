@@ -137,7 +137,14 @@ class CatGamelistMgr():
         if game_name not in self.__d_gamelist.keys():
             self.__d_gamelist[game_name] = GameInfoMgr()
 
-        self.__d_gamelist[game_name].set_attrib_val(attrib_name, attrib_val)
+        res = self.__d_gamelist[game_name].set_attrib_val(
+            attrib_name,
+            attrib_val
+        )
+
+        if res is False:
+            print(self.__d_gamelist[game_name].get_last_error())
+
         return True
 
 

@@ -203,7 +203,7 @@ class PnlCatGamesEditor(wx.Panel):
                     sizer_pnl_game_attr.Add(chkbx_reset, 0, wx.LEFT|wx.EXPAND, 5)
                     l_attr.append(chkbx_reset)
                 elif attr_type == datetime:
-                    dtpk_gattr_val = DatePickerCtrl(pnl_game_attr)
+                    dtpk_gattr_val = DatePickerCtrl(pnl_game_attr, style=wx.adv.DP_DROPDOWN)
                     dtpk_gattr_val.SetName(attr_name)
                     dtpk_gattr_val.SetRange(dtpk_gattr_val.GetRange()[1], datetime.today())
                     sizer_pnl_game_attr.Add(dtpk_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
@@ -229,15 +229,14 @@ class PnlCatGamesEditor(wx.Panel):
 
             # Заполняем значение атрибута
             if attr_name in d_game_attrs.keys():
-                l_attr[0] = d_game_attrs[attr_name]
                 # Элемент интерфейса, хранящий значение
                 if isinstance(l_attr[3], wx.SpinCtrl) \
                     or isinstance(l_attr[3], FloatSpin):
-                    l_attr[3].SetValue(l_attr[0])
+                    l_attr[3].SetValue(d_game_attrs[attr_name])
                 elif isinstance(l_attr[3], DatePickerCtrl):
-                    l_attr[3].SetValue(l_attr[0])
+                    l_attr[3].SetValue(d_game_attrs[attr_name].date())
                 else:
-                    l_attr[3].SetValue(str(l_attr[0]))
+                    l_attr[3].SetValue(str(d_game_attrs[attr_name]))
 
                 l_attr[3].SetBackgroundColour(wx.WHITE)
                 l_attr[3].Refresh()
@@ -247,8 +246,8 @@ class PnlCatGamesEditor(wx.Panel):
                     or isinstance(l_attr[3], FloatSpin):
                     l_attr[3].SetValue(0)
                 elif isinstance(l_attr[3], DatePickerCtrl):
-                    # После выполнения команды, дата не устанавливается
-                    l_attr[3].SetValue(datetime.today())
+                    # Если есть время, дату не установить
+                    l_attr[3].SetValue(datetime.today().date())
                 else:
                     l_attr[3].SetValue("")
 
@@ -332,7 +331,14 @@ class PnlCatGamesEditor(wx.Panel):
                 # применяем его к списку игр
                 dtpk = event.GetEventObject()
                 attr_name = dtpk.GetName()
-                attr_val = dtpk.GetValue()
+
+                # Преобразуем wx.DateTime в datetime
+                date_format = "%Y-%m-%d"
+                attr_val = datetime.strptime(
+                    dtpk.GetValue().Format(date_format),
+                    date_format
+                )
+
                 self.__gamelist_mgr.set_game_attrib(
                     self.__selected_game,
                     attr_name,
