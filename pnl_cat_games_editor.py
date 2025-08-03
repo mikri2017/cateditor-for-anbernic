@@ -9,9 +9,12 @@ class PnlCatGamesEditor(wx.Panel):
         # Каталог игр
         self.__gamelist_mgr = CatGamelistMgr()
 
+        # Текущая выбранная игра
+        self.__selected_game = ""
+
         # Список заполненния атрибутов игры в интерфейсе
-        # Эдемент списка - список с 2-мя элементами под индексами:
-        # 0 - значение, 1 и далее - элементы интерфейса
+        # Эдемент списка - список с элементами под индексами:
+        # 0 - наименование атрибута, 1 и далее - элементы интерфейса
         self.__l_gattrs = []
 
         # Текст последней ошибки
@@ -96,6 +99,7 @@ class PnlCatGamesEditor(wx.Panel):
 
             # Очистим интерфейс
             self.__lb_games.Clear()
+            self.__selected_game = ""
 
         self.__gamelist_mgr.set_xml_file_path(filepath)
 
@@ -109,6 +113,7 @@ class PnlCatGamesEditor(wx.Panel):
 
         # Сбросим элементы интерфейса
         self.__lb_games.Clear()
+        self.__selected_game = ""
         self.reload_game_attrs()
 
         # Наполняем список игр
@@ -123,14 +128,14 @@ class PnlCatGamesEditor(wx.Panel):
                 selected_id = self.__lb_games.FindString(selected_game)
 
         self.__lb_games.SetSelection(selected_id)
-        self.reload_game_attrs(self.__lb_games.GetString(selected_id))
+        self.__selected_game = self.__lb_games.GetString(selected_id)
+        self.reload_game_attrs()
         return True
 
 
-    def reload_game_attrs(self, name = ""):
+    def reload_game_attrs(self):
         """Заполнить атрибуты игры в интерфейсе
 
-        :param name: Наименование игры
         :return: Функция не возвращает результат
         """
 
@@ -138,14 +143,14 @@ class PnlCatGamesEditor(wx.Panel):
         d_all_game_attrs = self.__gamelist_mgr.get_game_attribs(False)
 
         d_game_attrs = {}
-        if name != "":
-            d_game_attrs = self.__gamelist_mgr.get_game_attribs(True, name)
+        if self.__selected_game != "":
+            d_game_attrs = self.__gamelist_mgr.get_game_attribs(True, self.__selected_game)
 
         i = 0
         for attr_name, attr_type in d_all_game_attrs.items():
             # Список атрибута
             l_attr = []
-            l_attr.append(None) # Значение
+            l_attr.append(attr_name) # 0-м всегда наименование атрибута
 
             if len(self.__l_gattrs) < i + 1:
                 # Элемента интерфейса еще нет, добавляем
@@ -191,13 +196,11 @@ class PnlCatGamesEditor(wx.Panel):
         """
 
         lb = event.GetEventObject()
-        game_name = lb.GetString(lb.GetSelection())
-        if game_name != "":
-            # Сброс и загрузка атрибутов игры
-            self.reload_game_attrs(game_name)
-        else:
-            # Сброс
-            self.reload_game_attrs()
+        self.__game_id_lb = lb.GetSelection()
+        self.__selected_game = lb.GetString(self.__game_id_lb)
+
+        # Сброс и загрузка атрибутов игры
+        self.reload_game_attrs()
 
 
     def btn_reset_click(self, event):
@@ -208,10 +211,10 @@ class PnlCatGamesEditor(wx.Panel):
         """
 
         id_sel = self.__lb_games.GetSelection()
-        game_name = ""
+        self.__selected_game = ""
         if id_sel != -1:
-            game_name = self.__lb_games.GetString(id_sel)
-            return self.reload_from_file(game_name)
+            self.__selected_game = self.__lb_games.GetString(id_sel)
+            return self.reload_from_file(self.__selected_game)
 
         return self.reload_from_file()
 
