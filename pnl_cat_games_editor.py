@@ -1,5 +1,8 @@
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
+from wx.lib.agw.floatspin import FloatSpin
+from wx.adv import DatePickerCtrl, EVT_DATE_CHANGED
+from datetime import datetime
 from cat_gamelist_mgr import CatGamelistMgr
 
 class PnlCatGamesEditor(wx.Panel):
@@ -170,11 +173,55 @@ class PnlCatGamesEditor(wx.Panel):
                 sizer_pnl_game_attr.Add(stxt_gattr_desc, 0, wx.LEFT, 5)
                 l_attr.append(stxt_gattr_desc)
 
-                txtctrl_gattr_val = wx.TextCtrl(pnl_game_attr)
-                txtctrl_gattr_val.SetName(attr_name)
-                sizer_pnl_game_attr.Add(txtctrl_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
-                txtctrl_gattr_val.Bind(wx.EVT_TEXT, self.txtctrl_changed)
-                l_attr.append(txtctrl_gattr_val)
+                # Назначаем элемент интерфейса, в зависимости от его типа
+                if attr_type == int:
+                    spnctrl_gattr_val = wx.SpinCtrl(pnl_game_attr)
+                    spnctrl_gattr_val.SetName(attr_name)
+                    spnctrl_gattr_val.SetMax(1000000)
+                    sizer_pnl_game_attr.Add(spnctrl_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
+                    spnctrl_gattr_val.Bind(wx.EVT_SPINCTRL, self.spnctrl_changed)
+                    l_attr.append(spnctrl_gattr_val)
+
+                    # Флажок сброса значения параметра
+                    chkbx_reset = wx.CheckBox(pnl_game_attr)
+                    chkbx_reset.SetLabel("Сбросить")
+                    chkbx_reset.Enabled = False
+                    sizer_pnl_game_attr.Add(chkbx_reset, 0, wx.LEFT|wx.EXPAND, 5)
+                    l_attr.append(chkbx_reset)
+                elif attr_type == float:
+                    fspn_gattr_val = FloatSpin(pnl_game_attr, digits=2)
+                    fspn_gattr_val.SetName(attr_name)
+                    fspn_gattr_val.SetMax(1000000)
+                    sizer_pnl_game_attr.Add(fspn_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
+                    fspn_gattr_val.Bind(wx.EVT_SPINCTRL, self.fspn_changed)
+                    l_attr.append(fspn_gattr_val)
+
+                    # Флажок сброса значения параметра
+                    chkbx_reset = wx.CheckBox(pnl_game_attr)
+                    chkbx_reset.SetLabel("Сбросить")
+                    chkbx_reset.Enabled = False
+                    sizer_pnl_game_attr.Add(chkbx_reset, 0, wx.LEFT|wx.EXPAND, 5)
+                    l_attr.append(chkbx_reset)
+                elif attr_type == datetime:
+                    dtpk_gattr_val = DatePickerCtrl(pnl_game_attr)
+                    dtpk_gattr_val.SetName(attr_name)
+                    dtpk_gattr_val.SetRange(dtpk_gattr_val.GetRange()[1], datetime.today())
+                    sizer_pnl_game_attr.Add(dtpk_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
+                    dtpk_gattr_val.Bind(EVT_DATE_CHANGED, self.datepick_changed)
+                    l_attr.append(dtpk_gattr_val)
+
+                    # Флажок сброса значения параметра
+                    chkbx_reset = wx.CheckBox(pnl_game_attr)
+                    chkbx_reset.SetLabel("Сбросить")
+                    chkbx_reset.Enabled = False
+                    sizer_pnl_game_attr.Add(chkbx_reset, 0, wx.LEFT|wx.EXPAND, 5)
+                    l_attr.append(chkbx_reset)
+                else:
+                    txtctrl_gattr_val = wx.TextCtrl(pnl_game_attr)
+                    txtctrl_gattr_val.SetName(attr_name)
+                    sizer_pnl_game_attr.Add(txtctrl_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
+                    txtctrl_gattr_val.Bind(wx.EVT_TEXT, self.txtctrl_changed)
+                    l_attr.append(txtctrl_gattr_val)
 
                 self.__sizer_scrl_pnl_attrs.Add(pnl_game_attr, 1, wx.TOP|wx.EXPAND, 5)
             else:
@@ -184,12 +231,26 @@ class PnlCatGamesEditor(wx.Panel):
             if attr_name in d_game_attrs.keys():
                 l_attr[0] = d_game_attrs[attr_name]
                 # Элемент интерфейса, хранящий значение
-                l_attr[3].SetValue(str(l_attr[0]))
+                if isinstance(l_attr[3], wx.SpinCtrl) \
+                    or isinstance(l_attr[3], FloatSpin):
+                    l_attr[3].SetValue(l_attr[0])
+                elif isinstance(l_attr[3], DatePickerCtrl):
+                    l_attr[3].SetValue(l_attr[0])
+                else:
+                    l_attr[3].SetValue(str(l_attr[0]))
+
                 l_attr[3].SetBackgroundColour(wx.WHITE)
                 l_attr[3].Refresh()
             else:
                 # Элемент интерфейса, хранящий значение
-                l_attr[3].SetValue("")
+                if isinstance(l_attr[3], wx.SpinCtrl) \
+                    or isinstance(l_attr[3], FloatSpin):
+                    l_attr[3].SetValue(0)
+                elif isinstance(l_attr[3], DatePickerCtrl):
+                    # После выполнения команды, дата не устанавливается
+                    l_attr[3].SetValue(datetime.today())
+                else:
+                    l_attr[3].SetValue("")
 
             if len(self.__l_gattrs) < i + 1:
                 self.__l_gattrs.append(l_attr)
@@ -214,6 +275,69 @@ class PnlCatGamesEditor(wx.Panel):
 
         # Сброс и загрузка атрибутов игры
         self.reload_game_attrs()
+
+
+    def spnctrl_changed(self, event):
+        """Изменилось числовое свойство игры
+
+        :param event: Событие элемента графического интерфейса
+        :return: Функция не возвращает результат
+        """
+
+        if self.__selected_game != "":
+            if self.__ignore_chg_attrib is False:
+                # Пользователь изменил атрибут игры,
+                # применяем его к списку игр
+                spnctrl = event.GetEventObject()
+                attr_name = spnctrl.GetName()
+                attr_val = spnctrl.GetValue()
+                self.__gamelist_mgr.set_game_attrib(
+                    self.__selected_game,
+                    attr_name,
+                    attr_val
+                )
+
+
+    def fspn_changed(self, event):
+        """Изменилось числовое дробное свойство игры
+
+        :param event: Событие элемента графического интерфейса
+        :return: Функция не возвращает результат
+        """
+
+        if self.__selected_game != "":
+            if self.__ignore_chg_attrib is False:
+                # Пользователь изменил атрибут игры,
+                # применяем его к списку игр
+                spnctrl = event.GetEventObject()
+                attr_name = spnctrl.GetName()
+                attr_val = spnctrl.GetValue()
+                self.__gamelist_mgr.set_game_attrib(
+                    self.__selected_game,
+                    attr_name,
+                    attr_val
+                )
+
+
+    def datepick_changed(self, event):
+        """Изменилось свойство игры, представленное датой
+
+        :param event: Событие элемента графического интерфейса
+        :return: Функция не возвращает результат
+        """
+
+        if self.__selected_game != "":
+            if self.__ignore_chg_attrib is False:
+                # Пользователь изменил атрибут игры,
+                # применяем его к списку игр
+                dtpk = event.GetEventObject()
+                attr_name = dtpk.GetName()
+                attr_val = dtpk.GetValue()
+                self.__gamelist_mgr.set_game_attrib(
+                    self.__selected_game,
+                    attr_name,
+                    attr_val
+                )
 
 
     def txtctrl_changed(self, event):
