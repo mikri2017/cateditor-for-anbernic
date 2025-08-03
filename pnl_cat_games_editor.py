@@ -1,4 +1,5 @@
 import wx
+from wx.lib.scrolledpanel import ScrolledPanel
 from cat_gamelist_mgr import CatGamelistMgr
 
 class PnlCatGamesEditor(wx.Panel):
@@ -8,6 +9,11 @@ class PnlCatGamesEditor(wx.Panel):
         # Каталог игр
         self.__gamelist_mgr = CatGamelistMgr()
 
+        # Список заполненния атрибутов игры в интерфейсе
+        # Эдемент списка - список с 2-мя элементами под индексами:
+        # 0 - значение, 1 и далее - элементы интерфейса
+        self.__l_gattrs = []
+
         # Текст последней ошибки
         self.__err_msg = ""
 
@@ -16,12 +22,18 @@ class PnlCatGamesEditor(wx.Panel):
         self.__sizer_main = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.__sizer_main)
 
-        self.__stb_game_list = wx.StaticBox(self, wx.ID_ANY, "Список игр")
+        self.__pnl_ed = wx.Panel(self)
+        self.__sizer_pnl_main = wx.BoxSizer(wx.HORIZONTAL)
+        self.__pnl_ed.SetSizer(self.__sizer_pnl_main)
+        self.__sizer_main.Add(self.__pnl_ed, 1, wx.TOP|wx.EXPAND)
+
+        self.__stb_game_list = wx.StaticBox(self.__pnl_ed, wx.ID_ANY, "Список игр")
         self.__sizer_stb_game_list = wx.StaticBoxSizer(self.__stb_game_list, orient=wx.VERTICAL)
-        self.__sizer_main.Add(self.__sizer_stb_game_list, 1, wx.TOP|wx.EXPAND, 0)
+        self.__sizer_pnl_main.Add(self.__sizer_stb_game_list, 1, wx.TOP|wx.EXPAND, 0)
 
         self.__lb_games = wx.ListBox(self.__stb_game_list)
         self.__sizer_stb_game_list.Add(self.__lb_games, 1, wx.EXPAND)
+        self.__lb_games.Bind(wx.EVT_LISTBOX, self.lb_games_selected)
 
         self.__stb_g_add_del = wx.StaticBox(self.__stb_game_list, wx.ID_ANY)
         self.__sizer_g_add_del = wx.StaticBoxSizer(self.__stb_g_add_del, orient=wx.HORIZONTAL)
@@ -45,6 +57,20 @@ class PnlCatGamesEditor(wx.Panel):
         self.__btn_save = wx.Button(self.__stb_ctrls, wx.ID_ANY, "Сохранить")
         self.__sizer_stb_ctrls.Add(self.__btn_save, 0, wx.RIGHT, border=5)
         self.__btn_save.Bind(wx.EVT_BUTTON, self.btn_save_click)
+
+        # Заполняем блок атрибутов
+        self.__stb_game_attrs = wx.StaticBox(self.__pnl_ed, wx.ID_ANY, "Атрибуты игры")
+        self.__sizer_stb_game_attr = wx.StaticBoxSizer(self.__stb_game_attrs, orient=wx.VERTICAL)
+        self.__sizer_pnl_main.Add(self.__sizer_stb_game_attr, 3, wx.EXPAND, 0)
+
+        self.__scrl_pnl_attrs = ScrolledPanel(self.__stb_game_attrs)
+        self.__scrl_pnl_attrs.SetupScrolling(False)
+        self.__sizer_scrl_pnl_attrs = wx.BoxSizer(wx.VERTICAL)
+        self.__scrl_pnl_attrs.SetSizer(self.__sizer_scrl_pnl_attrs)
+        self.__sizer_stb_game_attr.Add(self.__scrl_pnl_attrs, 1, wx.EXPAND)
+
+        # Заполняем интерфейс атрибутами и их значениями
+        self.reload_game_attrs()
 
 
     def get_last_error(self):
@@ -74,23 +100,104 @@ class PnlCatGamesEditor(wx.Panel):
         self.__gamelist_mgr.set_xml_file_path(filepath)
 
 
-    def reload_from_file(self):
+    def reload_from_file(self, selected_game = ""):
         """Перезагрузить общую информацию из файла
 
+        :param selected_game: Наименование выбранной игры
         :return: True, в случае успеха
         """
 
-        # Наполняем список игр
+        # Сбросим элементы интерфейса
         self.__lb_games.Clear()
+        self.reload_game_attrs()
 
+        # Наполняем список игр
         if self.__gamelist_mgr.parse_xml_file() is False:
             self.__err_msg = self.__gamelist_mgr.get_last_error()
             return False
 
+        selected_id = 0
         for game_name in self.__gamelist_mgr.get_game_names():
             self.__lb_games.Append(game_name)
+            if game_name == selected_game:
+                selected_id = self.__lb_games.FindString(selected_game)
 
+        self.__lb_games.SetSelection(selected_id)
+        self.reload_game_attrs(self.__lb_games.GetString(selected_id))
         return True
+
+
+    def reload_game_attrs(self, name = ""):
+        """Заполнить атрибуты игры в интерфейсе
+
+        :param name: Наименование игры
+        :return: Функция не возвращает результат
+        """
+
+        # Получаем возможные атрибуты игры
+        d_all_game_attrs = self.__gamelist_mgr.get_game_attribs(False)
+
+        d_game_attrs = {}
+        if name != "":
+            d_game_attrs = self.__gamelist_mgr.get_game_attribs(True, name)
+
+        i = 0
+        for attr_name, attr_type in d_all_game_attrs.items():
+            # Список атрибута
+            l_attr = []
+            l_attr.append(None) # Значение
+
+            if len(self.__l_gattrs) < i + 1:
+                # Элемента интерфейса еще нет, добавляем
+                pnl_game_attr = wx.Panel(self.__scrl_pnl_attrs)
+                sizer_pnl_game_attr = wx.BoxSizer(wx.HORIZONTAL)
+                pnl_game_attr.SetSizer(sizer_pnl_game_attr)
+                l_attr.append(pnl_game_attr)
+
+                stxt_gattr_desc = wx.StaticText(pnl_game_attr)
+                stxt_gattr_desc.SetLabel(attr_name)
+                sizer_pnl_game_attr.Add(stxt_gattr_desc, 0, wx.LEFT, 5)
+                l_attr.append(stxt_gattr_desc)
+
+                txtctrl_gattr_val = wx.TextCtrl(pnl_game_attr)
+                sizer_pnl_game_attr.Add(txtctrl_gattr_val, 1, wx.LEFT|wx.EXPAND, 5)
+                l_attr.append(txtctrl_gattr_val)
+
+                self.__sizer_scrl_pnl_attrs.Add(pnl_game_attr, 1, wx.TOP|wx.EXPAND, 5)
+            else:
+                l_attr = self.__l_gattrs[i]
+
+            # Заполняем значение атрибута
+            if attr_name in d_game_attrs.keys():
+                l_attr[0] = d_game_attrs[attr_name]
+                # Элемент интерфейса, хранящий значение
+                l_attr[3].SetValue(str(l_attr[0]))
+            else:
+                # Элемент интерфейса, хранящий значение
+                l_attr[3].SetValue("")
+
+            if len(self.__l_gattrs) < i + 1:
+                self.__l_gattrs.append(l_attr)
+            else:
+                self.__l_gattrs[i] = l_attr
+
+            i += 1
+
+
+    def lb_games_selected(self, event):
+        """Реакция на выбор игры из списка
+
+        :return: Функция не возвращает результат
+        """
+
+        lb = event.GetEventObject()
+        game_name = lb.GetString(lb.GetSelection())
+        if game_name != "":
+            # Сброс и загрузка атрибутов игры
+            self.reload_game_attrs(game_name)
+        else:
+            # Сброс
+            self.reload_game_attrs()
 
 
     def btn_reset_click(self, event):
@@ -99,6 +206,12 @@ class PnlCatGamesEditor(wx.Panel):
         :param event: Событие элемента графического интерфейса
         :return: Функция не возвращает результат
         """
+
+        id_sel = self.__lb_games.GetSelection()
+        game_name = ""
+        if id_sel != -1:
+            game_name = self.__lb_games.GetString(id_sel)
+            return self.reload_from_file(game_name)
 
         return self.reload_from_file()
 

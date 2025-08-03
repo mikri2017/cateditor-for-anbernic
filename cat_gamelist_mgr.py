@@ -100,17 +100,24 @@ class CatGamelistMgr():
         return list(self.__d_gamelist.keys())
 
 
-    def get_game_attribs(self, name):
-        """Получить атрибуты игры по её названию
+    def get_game_attribs(self, filled, name = ""):
+        """Получить возможные атрибуты, либо только заполненные у конкретной
+        игры по её названию
 
+        :param filled: Если True, выведет только заподненные у конкретной
+        игры
         :param name: Наименование игры
-        :return: Словарь атрибутов игры
+        :return: Словарь атрибут - типа, либо атрибут - значение, если
+        запрошена конкретная игра
         """
 
-        if "name" in self.__d_gamelist.keys():
-            return self.__d_gamelist[name].get_filled_attribs()
+        if filled is True:
+            if name in self.__d_gamelist.keys():
+                return self.__d_gamelist[name].get_filled_attribs()
+            else:
+                return {}
         else:
-            return {}
+            return GameInfoMgr().get_possible_attribs()
 
 
     def set_game_attribs(self, d_attribs):

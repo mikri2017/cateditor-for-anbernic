@@ -49,13 +49,13 @@ class GameInfoMgr():
         return self.__err_msg
 
 
-    def get_attrib_list(self):
-        """Получить список возможных атрибутов
+    def get_possible_attribs(self):
+        """Получить список возможных атрибутов c их типами
 
-        :return: Список тегов - атрибутов игры
+        :return: Словарь тег (атрибут игры) - его тип
         """
 
-        return self.__d_elem_types.keys()
+        return self.__d_elem_types
 
 
     def get_filled_attribs(self):
